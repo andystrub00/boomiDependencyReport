@@ -402,7 +402,7 @@
             
             // Create SVG
             const svg = d3.select("#diagram")
-                .append("png")
+                .append("svg")
                 .attr("width", width)
                 .attr("height", height)
                 .call(d3.zoom().on("zoom", (event) => {
@@ -476,15 +476,14 @@
                 .attr("y", -20)
                 .attr("rx", 5)
                 .attr("ry", 5)
-				.attr("fill", d => {
-					switch (d.type) {
-						case "connector-action": return "#ffcc80"; // Orange
-						case "process": return "#a5d6a7"; // Green
-						case "connector-settings": return "#90caf9"; // Blue
-						case "isolated": return "#fcefef"; // Light Red
-						default: return "#ffffff"; // White as fallback
-					}
-				});
+                .attr("fill", d => {
+                    switch (d.type) {
+                        case "connector-action": return "#ffcc80";
+                        case "process": return "#a5d6a7"; // Green
+                        case "connector-settings": return "#90caf9";
+                        default: return "#ffffff";
+                    }
+                });
             
             node.append("text")
                 .text(d => d.name)
