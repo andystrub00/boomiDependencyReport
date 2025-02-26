@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boomi Component Dependency Diagram</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background-color: #0078d4;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .section {
+            background-color: white;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1, h2 {
+            margin-top: 0;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        
+        th {
+            background-color: #f2f2f2;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        #diagram {
+            width: 100%;
+            height: 600px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .node {
+            cursor: move;
+        }
+        
+        .node rect {
+            fill: #fff;
+            stroke: #1d3557;
+            stroke-width: 2px;
+        }
+        
+        .isolated-node rect {
+            fill: #fcefef;
+            stroke: #e63946;
+        }
+        
+        .node text {
+            font-size: 12px;
+            text-anchor: middle;
+            dominant-baseline: middle;
+        }
+        
+        .link {
+            fill: none;
+            stroke: #999;
+            stroke-width: 1.5px;
+            marker-end: url(#arrowhead);
+        }
+        
+        .buttons {
+            margin-bottom: 15px;
+        }
+        
+        button {
+            padding: 8px 15px;
+            margin-right: 10px;
+            border: none;
+            border-radius: 4px;
+            background-color: #0078d4;
+            color: white;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background-color: #005a9e;
+        }
+        
+        .legend {
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .legend-color {
+            width: 15px;
+            height: 15px;
+            border: 1px solid #000;
+        }
+        
+        .import-export {
+            margin-top: 20px;
+        }
+        
+        #fileInput {
+            display: none;
+        }
+        
+        .file-input-label {
+            padding: 8px 15px;
+            border-radius: 4px;
+            background-color: #4caf50;
+            color: white;
+            cursor: pointer;
+            display: inline-block;
+        }
+        
+        .file-input-label:hover {
+            background-color: #3e8e41;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+        
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 5px;
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            color: black;
+        }
+        
+        .search-container {
+            margin-bottom: 15px;
+        }
+        
+        #searchInput {
+            padding: 8px;
+            width: 250px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .layout-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+		.connector-action rect { fill: #ffcc80; } /* Orange */
+		.process rect { fill: #a5d6a7; } /* Green */
+		.connector-settings rect { fill: #90caf9; } /* Blue */
+		.isolated-node rect { fill: #fcefef; } /* Light Red */
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Boomi Component Dependency Diagram</h1>
+        </div>
+        
+        <div class="section">
+            <h2>Diagram</h2>
+            <div class="controls">
+                <div class="buttons">
+                    <button id="resetBtn">Reset View</button>
+                    <button id="exportBtn">Export Diagram</button>
+                    <button id="toggleIsolatedBtn">Toggle Isolated Components</button>
+                </div>
+                <div class="layout-buttons">
+                    <button id="applyForceLayoutBtn">Auto Arrange</button>
+                    <button id="applyCircleLayoutBtn">Circle Layout</button>
+                    <button id="applyHierarchicalLayoutBtn">Hierarchical Layout</button>
+                </div>
+            </div>
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="Search components...">
+            </div>
+            <div id="diagram"></div>
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: white;"></div>
+                    <span>Regular Component</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #fcefef;"></div>
+                    <span>Isolated Component (No References)</span>
+                </div>
+				<div class="legend-item">
+					<div class="legend-color" style="background-color: #ffcc80;"></div>
+					<span>Connector Action</span>
+				</div>
+				<div class="legend-item">
+					<div class="legend-color" style="background-color: #a5d6a7;"></div>
+					<span>Process</span>
+				</div>
+				<div class="legend-item">
+					<div class="legend-color" style="background-color: #90caf9;"></div>
+					<span>Connector Settings</span>
+				</div>
+				<div class="legend-item">
+					<div class="legend-color" style="background-color: #fcefef;"></div>
+					<span>Isolated Component</span>
+				</div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>Isolated Components</h2>
+            <p>Components that neither reference nor are referenced by other components:</p>
+            <table id="isolatedTable">
+                <thead>
+                    <tr>
+                        <th>Component Name</th>
+                        <th>Type</th>
+                        <th>Path</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Isolated components will be listed here -->
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="section import-export">
+            <h2>Import/Export Data</h2>
+            <button id="importBtnTrigger">Import Component Data</button>
+            <input type="file" id="fileInput" accept=".json">
+            <label for="fileInput" class="file-input-label">Choose File</label>
+            <button id="exportDataBtn">Export Component Data</button>
+        </div>
+    </div>
+    
+    <div id="componentModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modalTitle">Component Details</h2>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+    
+    <script>
+        // Sample data structure - replace this with your actual data from Boomi
+        let sampleData = {
+            components: [
+				{id: "09b21b7a-fdba-46cd-a4dd-812b3fc6b2f1", name: "Unrefed Flat File", type: "profile.flatfile", path: "YL/Sandbox/Andy Strub (Argano)/Atomsphere API/TEST SUBFOLDER"},
+{id: "26b680b8-4e09-4fd7-8143-872f4eb46e47", name: "[TEMP] [sub] Sub Process One", type: "process", path: "YL/Sandbox/Andy Strub (Argano)/Atomsphere API/TEST SUBFOLDER"},
+{id: "3a8fa0b3-0641-4ecb-aad7-085951ba59df", name: "[TEMP] [Main] Parent Process Two", type: "process", path: "YL/Sandbox/Andy Strub (Argano)/Atomsphere API/TEST SUBFOLDER"},
+{id: "a07be6ce-13b6-41e1-a983-f7f78503bc20", name: "[TEMP] Database V2 Operation", type: "connector-action", path: "YL/Sandbox/Andy Strub (Argano)/Atomsphere API/TEST SUBFOLDER"},
+{id: "e9b2bfa0-9607-4fb5-8ebe-10379a752034", name: "[TEMP] [Main] Parent Process One", type: "process", path: "YL/Sandbox/Andy Strub (Argano)/Atomsphere API/TEST SUBFOLDER"},
+{id: "fb128b14-fcbb-4a3b-a9d7-c466c11cd518", name: "[TEMP] Database V2 Connection", type: "connector-settings", path: "YL/Sandbox/Andy Strub (Argano)/Atomsphere API/TEST SUBFOLDER"},
+
+            ],
+            references: [
+				{source: "26b680b8-4e09-4fd7-8143-872f4eb46e47", target: "a07be6ce-13b6-41e1-a983-f7f78503bc20"},
+{source: "26b680b8-4e09-4fd7-8143-872f4eb46e47", target: "fb128b14-fcbb-4a3b-a9d7-c466c11cd518"},
+{source: "e9b2bfa0-9607-4fb5-8ebe-10379a752034", target: "26b680b8-4e09-4fd7-8143-872f4eb46e47"},
+{source: "3a8fa0b3-0641-4ecb-aad7-085951ba59df", target: "a07be6ce-13b6-41e1-a983-f7f78503bc20"},
+{source: "3a8fa0b3-0641-4ecb-aad7-085951ba59df", target: "fb128b14-fcbb-4a3b-a9d7-c466c11cd518"},
+
+            ]
+        };
+        
+        let graph = {
+            nodes: [],
+            links: []
+        };
+        
+        let isolatedComponents = [];
+        let showIsolated = true;
+        let simulation = null;
+        
+        function initializeGraph() {
+            // Reset graph
+            graph.nodes = [];
+            graph.links = [];
+            isolatedComponents = [];
+            
+            // Create a map to track referenced components
+            const referencedComponents = new Set();
+            sampleData.references.forEach(ref => {
+                referencedComponents.add(ref.source);
+                referencedComponents.add(ref.target);
+            });
+            
+            // Process all components
+            sampleData.components.forEach(comp => {
+                const node = {
+                    id: comp.id,
+                    name: comp.name,
+                    type: comp.type,
+                    path: comp.path,
+                    isIsolated: !referencedComponents.has(comp.id),
+                    x: undefined,
+                    y: undefined,
+                    fx: undefined,
+                    fy: undefined
+                };
+                
+                if (node.isIsolated) {
+                    isolatedComponents.push(node);
+                }
+                
+                graph.nodes.push(node);
+            });
+            
+            // Add all links
+            sampleData.references.forEach(ref => {
+                graph.links.push({
+                    source: ref.source,
+                    target: ref.target
+                });
+            });
+            
+            // Update the isolated components table
+            updateIsolatedTable();
+        }
+        
+        function updateIsolatedTable() {
+            const tableBody = document.querySelector("#isolatedTable tbody");
+            tableBody.innerHTML = "";
+            
+            if (isolatedComponents.length === 0) {
+                const row = document.createElement("tr");
+                row.innerHTML = "<td colspan='3'>No isolated components found.</td>";
+                tableBody.appendChild(row);
+                return;
+            }
+            
+            isolatedComponents.forEach(comp => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${comp.name}</td>
+                    <td>${comp.type}</td>
+                    <td>${comp.path}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+        
+        function initializeDiagram() {
+            const width = document.getElementById("diagram").clientWidth;
+            const height = document.getElementById("diagram").clientHeight;
+            
+            // Clear previous SVG if exists
+            d3.select("#diagram svg").remove();
+            
+            // Create SVG
+            const svg = d3.select("#diagram")
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height)
+                .call(d3.zoom().on("zoom", (event) => {
+                    g.attr("transform", event.transform);
+                }));
+            
+            // Define arrowhead marker
+            svg.append("defs").append("marker")
+                .attr("id", "arrowhead")
+                .attr("viewBox", "0 -5 10 10")
+                .attr("refX", 20)
+                .attr("refY", 0)
+                .attr("markerWidth", 6)
+                .attr("markerHeight", 6)
+                .attr("orient", "auto")
+                .append("path")
+                .attr("d", "M0,-5L10,0L0,5");
+            
+            // Create main group for zoom/pan
+            const g = svg.append("g");
+            
+            // Filter nodes based on isolated toggle
+            const visibleNodes = showIsolated ? 
+                graph.nodes : 
+                graph.nodes.filter(d => !d.isIsolated);
+            
+            // Initial node positioning if not already defined
+            positionNodesInitially(visibleNodes, width, height);
+            
+            // Create simulation with very weak forces (mostly for initialization)
+            simulation = d3.forceSimulation(visibleNodes)
+                .force("link", d3.forceLink(graph.links)
+                    .id(d => d.id)
+                    .distance(150)
+                    .strength(0.05)) // Very weak link force
+                .force("charge", d3.forceManyBody().strength(-50)) // Very weak charge
+                .force("center", d3.forceCenter(width / 2, height / 2).strength(0.05)) // Very weak centering
+                .force("collision", d3.forceCollide(70).strength(0.2)); // Weak collision
+            
+            // Immediately stop simulation after initial layout
+            simulation.stop();
+            
+            // Run simulation for 300 iterations and then stop (just to get initial positioning)
+            simulation.tick(300);
+            
+            // Draw links
+            const link = g.append("g")
+                .selectAll("path")
+                .data(graph.links)
+                .enter()
+                .append("path")
+                .attr("class", "link");
+            
+            // Draw nodes
+            const node = g.append("g")
+                .selectAll(".node")
+                .data(visibleNodes)
+                .enter()
+                .append("g")
+                .attr("class", d => d.isIsolated ? "node isolated-node" : "node")
+                .attr("transform", d => `translate(${d.x}, ${d.y})`)
+                .call(d3.drag()
+                    .on("start", dragstarted)
+                    .on("drag", dragged)
+                    .on("end", dragended));
+            
+            node.append("rect")
+                .attr("width", d => Math.max(d.name.length * 8, 100))
+                .attr("height", 40)
+                .attr("x", d => -(Math.max(d.name.length * 8, 100) / 2))
+                .attr("y", -20)
+                .attr("rx", 5)
+                .attr("ry", 5);
+            
+            node.append("text")
+                .text(d => d.name)
+                .attr("font-size", "12px");
+            
+            // Add click event for component details
+            node.on("click", function(event, d) {
+                if (!event.defaultPrevented) { // Only if not dragging
+                    event.stopPropagation();
+                    showComponentDetails(d);
+                }
+            });
+            
+            // Function to update link positions
+            function updateLinks() {
+                link.attr("d", d => {
+                    const sourceNode = visibleNodes.find(n => n.id === (typeof d.source === 'object' ? d.source.id : d.source));
+                    const targetNode = visibleNodes.find(n => n.id === (typeof d.target === 'object' ? d.target.id : d.target));
+                    
+                    if (!sourceNode || !targetNode) return "";
+                    
+                    const sourceWidth = Math.max(sourceNode.name.length * 8, 100) / 2;
+                    const targetWidth = Math.max(targetNode.name.length * 8, 100) / 2;
+                    
+                    const dx = targetNode.x - sourceNode.x;
+                    const dy = targetNode.y - sourceNode.y;
+                    const angle = Math.atan2(dy, dx);
+                    
+                    const sourceX = sourceNode.x + sourceWidth * Math.cos(angle);
+                    const sourceY = sourceNode.y + 20 * Math.sin(angle);
+                    const targetX = targetNode.x - targetWidth * Math.cos(angle);
+                    const targetY = targetNode.y - 20 * Math.sin(angle);
+                    
+                    return `M${sourceX},${sourceY} L${targetX},${targetY}`;
+                });
+            }
+            
+            // Initial link update
+            updateLinks();
+            
+            function dragstarted(event, d) {
+                d3.select(this).raise();
+                event.sourceEvent.stopPropagation();
+            }
+            
+            function dragged(event, d) {
+                // Update node position directly
+                d.x = event.x;
+                d.y = event.y;
+                
+                // Fix position while dragging
+                d.fx = event.x;
+                d.fy = event.y;
+                
+                // Update this nodes position
+                d3.select(this).attr("transform", `translate(${d.x}, ${d.y})`);
+                
+                // Update links
+                updateLinks();
+            }
+            
+            function dragended(event, d) {
+                // Keep position fixed after drag
+                d.fx = d.x;
+                d.fy = d.y;
+            }
+            
+            // Search functionality
+            document.getElementById("searchInput").addEventListener("input", function() {
+                const searchTerm = this.value.toLowerCase();
+                
+                if (searchTerm === "") {
+                    node.style("opacity", 1);
+                    link.style("opacity", 1);
+                    return;
+                }
+                
+                node.style("opacity", d => {
+                    return d.name.toLowerCase().includes(searchTerm) ? 1 : 0.2;
+                });
+                
+                link.style("opacity", 0.2);
+            });
+            
+            // Add auto-arrange functionality
+            document.getElementById("applyForceLayoutBtn").addEventListener("click", function() {
+                // Clear fixed positions
+                visibleNodes.forEach(node => {
+                    node.fx = null;
+                    node.fy = null;
+                });
+                
+                // Reset simulation with stronger forces
+                simulation.alpha(1).restart();
+                simulation.force("link").strength(0.5);
+                simulation.force("charge").strength(-300);
+                simulation.force("center").strength(0.1);
+                
+                // Update on tick
+                simulation.on("tick", () => {
+                    node.attr("transform", d => `translate(${d.x}, ${d.y})`);
+                    updateLinks();
+                });
+                
+                // After some iterations, stop and fix positions
+                setTimeout(() => {
+                    simulation.stop();
+                    // Fix all node positions
+                    visibleNodes.forEach(node => {
+                        node.fx = node.x;
+                        node.fy = node.y;
+                    });
+                }, 2000);
+            });
+            
+            // Circle layout
+            document.getElementById("applyCircleLayoutBtn").addEventListener("click", function() {
+                const radius = Math.min(width, height) / 3;
+                const centerX = width / 2;
+                const centerY = height / 2;
+                
+                visibleNodes.forEach((node, i) => {
+                    const angle = (i / visibleNodes.length) * 2 * Math.PI;
+                    node.x = centerX + radius * Math.cos(angle);
+                    node.y = centerY + radius * Math.sin(angle);
+                    node.fx = node.x;
+                    node.fy = node.y;
+                    
+                    d3.select(node.el)
+                        .transition()
+                        .duration(800)
+                        .attr("transform", `translate(${node.x}, ${node.y})`);
+                });
+                
+                // Update node positions with animation
+                node.transition()
+                    .duration(800)
+                    .attr("transform", d => `translate(${d.x}, ${d.y})`);
+                
+                // Update links after animation
+                setTimeout(() => {
+                    updateLinks();
+                }, 800);
+            });
+            
+            // Hierarchical layout
+            document.getElementById("applyHierarchicalLayoutBtn").addEventListener("click", function() {
+                // Find root nodes (those that are not targets of any link)
+                const allTargets = new Set(graph.links.map(link => 
+                    typeof link.target === 'object' ? link.target.id : link.target
+                ));
+                
+                const rootNodeIds = visibleNodes
+                    .filter(node => !allTargets.has(node.id))
+                    .map(node => node.id);
+                
+                // If no root nodes, use isolated components or just the first node
+                if (rootNodeIds.length === 0) {
+                    if (isolatedComponents.length > 0) {
+                        rootNodeIds.push(isolatedComponents[0].id);
+                    } else {
+                        rootNodeIds.push(visibleNodes[0].id);
+                    }
+                }
+                
+                // Build hierarchical levels
+                const levels = buildHierarchicalLevels(rootNodeIds);
+                
+                // Position nodes by level
+                const levelHeight = height / (levels.length + 1);
+                
+                levels.forEach((level, i) => {
+                    const levelY = levelHeight * (i + 1);
+                    const nodeWidth = width / (level.length + 1);
+                    
+                    level.forEach((nodeId, j) => {
+                        const node = visibleNodes.find(n => n.id === nodeId);
+                        if (node) {
+                            node.x = nodeWidth * (j + 1);
+                            node.y = levelY;
+                            node.fx = node.x;
+                            node.fy = node.y;
+                        }
+                    });
+                });
+                
+                // Position any remaining nodes at the bottom
+                const placedNodes = new Set();
+                levels.forEach(level => level.forEach(id => placedNodes.add(id)));
+                
+                const unplacedNodes = visibleNodes.filter(node => !placedNodes.has(node.id));
+                if (unplacedNodes.length > 0) {
+                    const bottomY = levelHeight * (levels.length + 1);
+                    const nodeWidth = width / (unplacedNodes.length + 1);
+                    
+                    unplacedNodes.forEach((node, i) => {
+                        node.x = nodeWidth * (i + 1);
+                        node.y = bottomY;
+                        node.fx = node.x;
+                        node.fy = node.y;
+                    });
+                }
+                
+                // Update node positions with animation
+                node.transition()
+                    .duration(800)
+                    .attr("transform", d => `translate(${d.x}, ${d.y})`);
+                
+                // Update links after animation
+                setTimeout(() => {
+                    updateLinks();
+                }, 800);
+            });
+            
+            // Helper function to build hierarchical levels
+            function buildHierarchicalLevels(rootNodeIds) {
+                const levels = [rootNodeIds];
+                const visited = new Set(rootNodeIds);
+                let currentLevel = rootNodeIds;
+                let hasNewNodes = true;
+                
+                while (hasNewNodes) {
+                    const nextLevel = [];
+                    hasNewNodes = false;
+                    
+                    for (const nodeId of currentLevel) {
+                        // Find all targets from this node
+                        const targets = graph.links
+                            .filter(link => {
+                                const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+                                return sourceId === nodeId;
+                            })
+                            .map(link => typeof link.target === 'object' ? link.target.id : link.target);
+                        
+                        // Add unvisited targets to next level
+                        for (const targetId of targets) {
+                            if (!visited.has(targetId)) {
+                                nextLevel.push(targetId);
+                                visited.add(targetId);
+                                hasNewNodes = true;
+                            }
+                        }
+                    }
+                    
+                    if (nextLevel.length > 0) {
+                        levels.push(nextLevel);
+                        currentLevel = nextLevel;
+                    }
+                }
+                
+                return levels;
+            }
+            
+            // Store DOM element reference for each node
+            node.each(function(d) {
+                d.el = this;
+            });
+            
+            return { svg, link, node, updateLinks };
+        }
+        
+        function positionNodesInitially(nodes, width, height) {
+            // Only set initial positions for nodes that dont have positions yet
+            nodes.forEach((node, i) => {
+                if (typeof node.x === 'undefined' || typeof node.y === 'undefined') {
+                    // Distribute nodes in a grid pattern
+                    const cols = Math.ceil(Math.sqrt(nodes.length));
+                    const rows = Math.ceil(nodes.length / cols);
+                    
+                    const colWidth = width / cols;
+                    const rowHeight = height / rows;
+                    
+                    const col = i % cols;
+                    const row = Math.floor(i / cols);
+                    
+                    node.x = colWidth * (col + 0.5);
+                    node.y = rowHeight * (row + 0.5);
+                }
+            });
+        }
+        
+        function showComponentDetails(component) {
+            const modal = document.getElementById("componentModal");
+            const modalTitle = document.getElementById("modalTitle");
+            const modalContent = document.getElementById("modalContent");
+            
+            modalTitle.textContent = component.name;
+            
+            // Find incoming and outgoing references
+            const incoming = graph.links.filter(link => {
+                const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+                return targetId === component.id;
+            });
+            
+            const outgoing = graph.links.filter(link => {
+                const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+                return sourceId === component.id;
+            });
+            
+            const incomingNames = incoming.map(link => {
+                const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+                const sourceNode = graph.nodes.find(n => n.id === sourceId);
+                return sourceNode ? sourceNode.name : 'Unknown';
+            });
+            
+            const outgoingNames = outgoing.map(link => {
+                const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+                const targetNode = graph.nodes.find(n => n.id === targetId);
+                return targetNode ? targetNode.name : 'Unknown';
+            });
+            
+            modalContent.innerHTML = `
+                <p><strong>Type:</strong> ${component.type}</p>
+                <p><strong>Path:</strong> ${component.path}</p>
+                <p><strong>References From:</strong> ${incomingNames.length ? incomingNames.join(", ") : "None"}</p>
+                <p><strong>References To:</strong> ${outgoingNames.length ? outgoingNames.join(", ") : "None"}</p>
+            `;
+            
+            modal.style.display = "block";
+        }
+        
+        // Event listeners
+        document.addEventListener("DOMContentLoaded", function() {
+            // Initialize graph with sample data
+            initializeGraph();
+            const diagramElements = initializeDiagram();
+            
+            // Reset view button
+            document.getElementById("resetBtn").addEventListener("click", function() {
+                // Remove fixed positions
+                graph.nodes.forEach(node => {
+                    node.x = undefined;
+                    node.y = undefined;
+                    node.fx = undefined;
+                    node.fy = undefined;
+                });
+                initializeDiagram();
+            });
+			
+			
+			// Apply Hierarchical Layout by default
+			document.getElementById("applyHierarchicalLayoutBtn").click();
+            
+            // Export diagram button (as SVG)
+            document.getElementById("exportBtn").addEventListener("click", function() {
+                const svgData = document.querySelector("#diagram svg").outerHTML;
+                const blob = new Blob([svgData], {type: "image/svg+xml"});
+                const url = URL.createObjectURL(blob);
+                
+                const link = document.createElement("a");
+                link.href = url;
+                link.download = "boomi-dependency-diagram.svg";
+                link.click();
+                
+                URL.revokeObjectURL(url);
+            });
+            
+            // Toggle isolated components
+            document.getElementById("toggleIsolatedBtn").addEventListener("click", function() {
+                showIsolated = !showIsolated;
+                initializeDiagram();
+            });
+            
+            // Modal close button
+            document.querySelector(".close").addEventListener("click", function() {
+                document.getElementById("componentModal").style.display = "none";
+            });
+            
+            // Click outside to close modal
+            window.addEventListener("click", function(event) {
+                const modal = document.getElementById("componentModal");
+                if (event.target === modal) {
+                    modal.style.display = "none";
+                }
+            });
+            
+            // Import button trigger
+            document.getElementById("importBtnTrigger").addEventListener("click", function() {
+                document.getElementById("fileInput").click();
+            });
+            
+            // Import data
+            document.getElementById("fileInput").addEventListener("change", function(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        sampleData = JSON.parse(e.target.result);
+                        initializeGraph();
+                        initializeDiagram();
+                        alert("Data imported successfully!");
+                    } catch (error) {
+                        alert("Error importing data: " + error.message);
+                    }
+                };
+                reader.readAsText(file);
+            });
+            
+            // Export data
+            document.getElementById("exportDataBtn").addEventListener("click", function() {
+                const dataStr = JSON.stringify(sampleData, null, 2);
+                const blob = new Blob([dataStr], {type: "application/json"});
+                const url = URL.createObjectURL(blob);
+                
+                const link = document.createElement("a");
+                link.href = url;
+                link.download = "boomi-component-data.json";
+                link.click();
+                
+                URL.revokeObjectURL(url);
+            });
+        });
+    </script>
+</body>
+</html>
