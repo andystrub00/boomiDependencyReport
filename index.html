@@ -114,7 +114,7 @@
         }
         
         .legend {
-            margin-top: 15px;
+            margin-bottom: 15px;
             display: flex;
             align-items: center;
             gap: 20px;
@@ -214,7 +214,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Boomi Component Dependency Diagram</h1>
+            <h1>Boomi Component Dependency Report</h1>
         </div>
         
         <div class="section">
@@ -222,41 +222,57 @@
             <div class="controls">
                 <div class="buttons">
                     <button id="resetBtn">Reset View</button>
-                    <button id="exportBtn">Export Diagram</button>
                     <button id="toggleIsolatedBtn">Toggle Isolated Components</button>
                 </div>
                 <div class="layout-buttons">
-                    <button id="applyForceLayoutBtn">Auto Arrange</button>
-                    <button id="applyCircleLayoutBtn">Circle Layout</button>
                     <button id="applyHierarchicalLayoutBtn">Hierarchical Layout</button>
+                    <button id="applyCircleLayoutBtn">Circle Layout</button>
+                    <button id="applyForceLayoutBtn">Auto Arrange</button>
                 </div>
             </div>
             <div class="search-container">
                 <input type="text" id="searchInput" placeholder="Search components...">
             </div>
-            <div id="diagram"></div>
+
             <div class="legend">
                 <div class="legend-item">
-                    <div class="legend-color" style="background-color: white;"></div>
-                    <span>Regular Component</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background-color: #fcefef;"></div>
+                    <div class="legend-color" style="background-color: #E9A2A2;"></div>
                     <span>Isolated Component (No References)</span>
                 </div>
-				<div class="legend-item">
-					<div class="legend-color" style="background-color: #ffcc80;"></div>
-					<span>Connector Action</span>
-				</div>
-				<div class="legend-item">
-					<div class="legend-color" style="background-color: #a5d6a7;"></div>
-					<span>Process</span>
-				</div>
-				<div class="legend-item">
-					<div class="legend-color" style="background-color: #90caf9;"></div>
-					<span>Connector Settings</span>
-				</div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #A5D6A7;"></div>
+                    <span>Process</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #90CAF9;"></div>
+                    <span>Connector</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #FFCC80;"></div>
+                    <span>Connector Operation</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #DD858E;"></div>
+                    <span>Profile</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #646165;"></div>
+                    <span>Mapping</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #81726A;"></div>
+                    <span>Cache</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #60695C;"></div>
+                    <span>Supplementals</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #ffffff;"></div>
+                    <span>Regular Component</span>
+                </div>
             </div>
+            <div id="diagram"></div>
         </div>
         
         <div class="section">
@@ -279,8 +295,7 @@
         <div class="section import-export">
             <h2>Import/Export Data</h2>
             <button id="importBtnTrigger">Import Component Data</button>
-            <input type="file" id="fileInput" accept=".json">
-            <label for="fileInput" class="file-input-label">Choose File</label>
+            <input type="file" id="fileInput" accept=".json" style="display: none;">
             <button id="exportDataBtn">Export Component Data</button>
         </div>
     </div>
@@ -305,9 +320,14 @@
 {id: "fb128b14-fcbb-4a3b-a9d7-c466c11cd518", name: "[TEMP] Database V2 Connection", type: "connector-settings", path: "YL/Sandbox/Andy Strub (Argano)/Atomsphere API/TEST SUBFOLDER"},
 {id: "04b0cc6d-2a36-44a5-8d0f-c8ccf255caf4", name: "New Map", type: "transform.map", path: "YL/Sandbox/Andy Strub (Argano)/Atomsphere API/TEST SUBFOLDER/TEST SUBSUB FOLDER"},
 {id: "1c3be23f-c7ad-406f-877e-80e6f0f463d4", name: "[TEMP] Cross Reference Table", type: "crossref", path: "YL/Sandbox/Andy Strub (Argano)/Atomsphere API/TEST SUBFOLDER/TEST SUBSUB FOLDER"},
+{id: "2754f960-9fa4-46a6-877e-81e0f5f9c666", name: "New PGP Certificate", type: "certificate.pgp", path: "YL/Sandbox/Andy Strub (Argano)/Atomsphere API/TEST SUBFOLDER/TEST SUBSUB FOLDER"},
+{id: "2a1b5cae-4333-4d22-afde-7ce22d9b888e", name: "New Flow Service", type: "flowservice", path: "YL/Sandbox/Andy Strub (Argano)/Atomsphere API/TEST SUBFOLDER/TEST SUBSUB FOLDER"},
 {id: "487cb817-efa4-41ec-867b-006e3ee72863", name: "New Process Property", type: "processproperty", path: "YL/Sandbox/Andy Strub (Argano)/Atomsphere API/TEST SUBFOLDER/TEST SUBSUB FOLDER"},
 {id: "4e396c24-10d9-4cfb-a5a0-a74bb49200f7", name: "New Process Script", type: "script.processing", path: "YL/Sandbox/Andy Strub (Argano)/Atomsphere API/TEST SUBFOLDER/TEST SUBSUB FOLDER"},
+{id: "51872485-5f26-4ca1-99d3-07354ee5f94d", name: "New Custom Library", type: "customlibrary", path: "YL/Sandbox/Andy Strub (Argano)/Atomsphere API/TEST SUBFOLDER/TEST SUBSUB FOLDER"},
+{id: "519b2f35-b55e-44c3-9b41-e585031545da", name: "New Database (Legacy) Profile", type: "profile.db", path: "YL/Sandbox/Andy Strub (Argano)/Atomsphere API/TEST SUBFOLDER/TEST SUBSUB FOLDER"},
 {id: "5bfb845d-96bf-4cc6-bd7e-b4ba97186007", name: "New XML Profile", type: "profile.xml", path: "YL/Sandbox/Andy Strub (Argano)/Atomsphere API/TEST SUBFOLDER/TEST SUBSUB FOLDER"},
+{id: "a148be48-32f2-4ff3-a4bd-d7e200c4dfbb", name: "New XSLT Stylesheet", type: "xslt", path: "YL/Sandbox/Andy Strub (Argano)/Atomsphere API/TEST SUBFOLDER/TEST SUBSUB FOLDER"},
 {id: "a8423230-63ef-420f-b204-927f344564ac", name: "Document Cache", type: "documentcache", path: "YL/Sandbox/Andy Strub (Argano)/Atomsphere API/TEST SUBFOLDER/TEST SUBSUB FOLDER"},
 {id: "aa0313b0-035a-4e9e-a5fe-769b5964c8be", name: "API Service", type: "webservice", path: "YL/Sandbox/Andy Strub (Argano)/Atomsphere API/TEST SUBFOLDER/TEST SUBSUB FOLDER"},
 {id: "b18ab0c2-ae62-4577-a287-71c2fd048d99", name: "New Process Route", type: "processroute", path: "YL/Sandbox/Andy Strub (Argano)/Atomsphere API/TEST SUBFOLDER/TEST SUBSUB FOLDER"},
@@ -316,6 +336,8 @@
 {id: "e0f4b290-7a56-4d1d-a9fc-b75fd00b1858", name: "New Map Script", type: "script.mapping", path: "YL/Sandbox/Andy Strub (Argano)/Atomsphere API/TEST SUBFOLDER/TEST SUBSUB FOLDER"},
 {id: "e9517b83-58a4-40cb-bc63-775e8792f018", name: "New Map Function", type: "transform.function", path: "YL/Sandbox/Andy Strub (Argano)/Atomsphere API/TEST SUBFOLDER/TEST SUBSUB FOLDER"},
 {id: "f3f22476-431b-4e86-a690-fddf33781686", name: "New Flat File Profile", type: "profile.flatfile", path: "YL/Sandbox/Andy Strub (Argano)/Atomsphere API/TEST SUBFOLDER/TEST SUBSUB FOLDER"},
+{id: "f536eb5b-ec98-47af-82fb-d613acc5802d", name: "New X.509 Certificate", type: "certificate", path: "YL/Sandbox/Andy Strub (Argano)/Atomsphere API/TEST SUBFOLDER/TEST SUBSUB FOLDER"},
+{id: "f9e8d1c1-58e4-4487-a307-e7d6c5372093", name: "New Organization", type: "tporganization", path: "YL/Sandbox/Andy Strub (Argano)/Atomsphere API/TEST SUBFOLDER/TEST SUBSUB FOLDER"},
 
             ],
             references: [
@@ -324,6 +346,7 @@
 {source: "e9b2bfa0-9607-4fb5-8ebe-10379a752034", target: "26b680b8-4e09-4fd7-8143-872f4eb46e47"},
 {source: "3a8fa0b3-0641-4ecb-aad7-085951ba59df", target: "a07be6ce-13b6-41e1-a983-f7f78503bc20"},
 {source: "3a8fa0b3-0641-4ecb-aad7-085951ba59df", target: "fb128b14-fcbb-4a3b-a9d7-c466c11cd518"},
+
 
             ]
         };
@@ -334,7 +357,7 @@
         };
         
         let isolatedComponents = [];
-        let showIsolated = true;
+        let showIsolated = false;
         let simulation = null;
         
         function initializeGraph() {
@@ -490,9 +513,9 @@
                 .attr("ry", 5)
                 .attr("fill", d => {
                     switch (d.type) {
-                        case "connector-action": return "#ffcc80";
                         case "process": return "#a5d6a7"; // Green
-                        case "connector-settings": return "#90caf9";
+                        case "connector-settings": return "#90caf9"; // Light Blue
+                        case "connector-action": return "#ffcc80"; //Light Yellow
                         default: return "#ffffff";
                     }
                 });
@@ -753,6 +776,10 @@
             node.each(function(d) {
                 d.el = this;
             });
+
+
+            // Apply Hierarchical Layout by default
+			document.getElementById("applyHierarchicalLayoutBtn").click();
             
             return { svg, link, node, updateLinks };
         }
@@ -838,20 +865,6 @@
 			
 			// Apply Hierarchical Layout by default
 			document.getElementById("applyHierarchicalLayoutBtn").click();
-            
-            // Export diagram button (as SVG)
-            document.getElementById("exportBtn").addEventListener("click", function() {
-                const svgData = document.querySelector("#diagram svg").outerHTML;
-                const blob = new Blob([svgData], {type: "image/svg+xml"});
-                const url = URL.createObjectURL(blob);
-                
-                const link = document.createElement("a");
-                link.href = url;
-                link.download = "boomi-dependency-diagram.svg";
-                link.click();
-                
-                URL.revokeObjectURL(url);
-            });
             
             // Toggle isolated components
             document.getElementById("toggleIsolatedBtn").addEventListener("click", function() {
